@@ -15,7 +15,8 @@ echo "[1/3] Installing package (editable)"
 pip install --no-build-isolation -e .
 
 echo "[2/3] Running unit tests"
-pytest -q
+python -m pip install pytest
+python -m pytest -q
 
 echo "[3/3] Capturing git and dependency snapshot"
 git rev-parse HEAD
