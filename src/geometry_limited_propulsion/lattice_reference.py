@@ -143,7 +143,7 @@ def phi_harmonic_series(
         for m in range(m_min, m_max + 1):
             freqs.append(f0 * (PHI**n) * m)
 
-    freqs_arr = np.array(sorted(set(freqs)))
+    freqs_arr = np.array(sorted(freqs))
 
     # Deduplicate within floating-point tolerance
     if len(freqs_arr) > 1:
@@ -189,16 +189,23 @@ def nearest_lattice_frequency(
     --------
     >>> f_lat, dphi = nearest_lattice_frequency(105.0, f0=100.0)
     >>> print(f"f_lat = {f_lat[0]:.4f} Hz,  Δφ_temp = {dphi[0]:.4f}")
+    f_lat = 102.1286 Hz,  Δφ_temp = 0.0281
+
+    With a restricted harmonic range the 100 Hz node becomes nearest:
+
+    >>> f_lat, dphi = nearest_lattice_frequency(105.0, f0=100.0, n_range=(-1, 1), m_range=(1, 2))
+    >>> print(f"f_lat = {f_lat[0]:.4f} Hz,  Δφ_temp = {dphi[0]:.4f}")
     f_lat = 100.0000 Hz,  Δφ_temp = 0.0500
     """
     series = phi_harmonic_series(f0, n_range=n_range, m_range=m_range)
     f_sys_arr = np.atleast_1d(np.asarray(f_sys, dtype=float))
 
-    # Vectorised nearest-neighbour search over the series
-    f_lat = np.empty_like(f_sys_arr)
-    for i, fs in enumerate(f_sys_arr.flat):
-        idx = np.argmin(np.abs(series - fs))
-        f_lat.flat[i] = series[idx]
+    # Vectorised nearest-neighbour search over the series using broadcasting.
+    # Shape: (len(series), N_flat) → argmin along axis 0 gives the nearest index
+    # for every element of f_sys at once, avoiding a Python-level loop.
+    diffs = np.abs(series[:, np.newaxis] - f_sys_arr.ravel())
+    indices = np.argmin(diffs, axis=0)
+    f_lat = series[indices].reshape(f_sys_arr.shape)
 
     delta_phi_temp = np.abs(f_sys_arr - f_lat) / f_lat
     return f_lat, delta_phi_temp
@@ -274,6 +281,8 @@ def psi_lat(
     >>> round(ref['f_phi'], 4)
     161.8034
     """
+    if f0 <= 0:
+        raise ValueError(f"f0 must be strictly positive, got {f0!r}.")
     if abs(epsilon) >= 0.5:
         raise ValueError(
             f"epsilon={epsilon!r} violates |ε| ≪ 1 (Eq. 4).  Use a value < 0.5."
@@ -489,6 +498,18 @@ class AlphaCalibrator:
         if delta_phi.shape != G_measured.shape:
             raise ValueError("delta_phi and G_measured must have the same shape.")
 
+        if alpha_init is not None and alpha_init <= 0:
+            raise ValueError(
+                f"alpha_init must be strictly positive, got {alpha_init!r}."
+            )
+
+        if np.any((G_measured < 0.0) | (G_measured > 1.0)):
+            warnings.warn(
+                "Some G_measured values are outside [0, 1] and will be clipped. "
+                "Check your input data.",
+                UserWarning,
+                stacklevel=2,
+            )
         G_measured = np.clip(G_measured, 0.0, 1.0)
 
         def gate_model(phi, alpha):
