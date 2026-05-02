@@ -10,10 +10,10 @@ Formulation of Coherence-Gated Momentum Transfer."
 
 Equations from the paper
 ------------------------
-Gate function (Eq. 6):
+Gate function (Eq. 6a):
     G(t) = exp(-α · Δφ(t)²)
 
-Velocity-gain law (Eq. 6):
+Velocity-gain law (Eq. 6b):
     Δv = Isp · η · ∫₀^tf  [P_in(t) / (M(t) · v(t))]  · G(t)  dt
 """
 
@@ -21,6 +21,12 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import ArrayLike
+
+# Backward-compatible trapezoid integration (np.trapz removed in NumPy 2.0)
+try:
+    _trapezoid = np.trapezoid
+except AttributeError:
+    _trapezoid = np.trapz  # type: ignore[attr-defined]
 
 
 # ---------------------------------------------------------------------------
@@ -63,7 +69,7 @@ def coherence_gate(delta_phi: ArrayLike, alpha: float) -> np.ndarray:
     Examples
     --------
     >>> import numpy as np
-    >>> from coherence_gate import coherence_gate
+    >>> from geometry_limited_propulsion.coherence_gate import coherence_gate
     >>> phi = np.linspace(0, 2, 9)
     >>> G = coherence_gate(phi, alpha=2.0)
     >>> G.round(4)
@@ -102,6 +108,8 @@ def classical_delta_v(
     float
         Classical velocity gain Δv [m s⁻¹].
     """
+    if isp <= 0:
+        raise ValueError(f"isp must be strictly positive, got {isp!r}.")
     if mass_final <= 0 or mass_initial <= mass_final:
         raise ValueError(
             "Require mass_initial > mass_final > 0; "
@@ -175,6 +183,8 @@ def hlv_ailee_delta_v(
 
     if not (t.shape == p_in.shape == mass.shape == velocity.shape == delta_phi.shape):
         raise ValueError("All array arguments must have the same shape.")
+    if isp <= 0:
+        raise ValueError(f"isp must be strictly positive, got {isp!r}.")
     if np.any(mass <= 0):
         raise ValueError("mass must be strictly positive at all time steps.")
     if np.any(velocity <= 0):
@@ -184,7 +194,7 @@ def hlv_ailee_delta_v(
 
     gate = coherence_gate(delta_phi, alpha)
     integrand = (p_in / (mass * velocity)) * gate
-    return float(isp * eta * np.trapz(integrand, t))
+    return float(isp * eta * _trapezoid(integrand, t))
 
 
 # ---------------------------------------------------------------------------

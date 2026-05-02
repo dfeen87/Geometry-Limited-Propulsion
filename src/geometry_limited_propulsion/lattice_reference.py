@@ -287,7 +287,7 @@ def psi_lat(
         raise ValueError(
             f"epsilon={epsilon!r} violates |ε| ≪ 1 (Eq. 4).  Use a value < 0.5."
         )
-    if epsilon >= 0.1:
+    if abs(epsilon) >= 0.1:
         warnings.warn(
             f"epsilon={epsilon!r} is approaching the ≪ 1 boundary; "
             "consider using a smaller value (e.g. 0.01–0.05).",
@@ -325,9 +325,8 @@ def acceptance_window_width(n_range: tuple[int, int] = (-4, 4)) -> float:
     """Estimate the natural acceptance-window half-width from W_φ geometry.
 
     The quasicrystal acceptance window W_φ (Eq. 2) has a width in the
-    perpendicular space E⊥ proportional to 1/φ² (the square of the reciprocal
-    golden ratio).  Projected onto the frequency axis this implies a
-    dimensionless half-width
+    perpendicular space E⊥ governed by the golden ratio φ.  Projected onto the
+    frequency axis this implies a dimensionless half-width
 
         Δφ_window ≈ 1 / φ^|n_max|
 
