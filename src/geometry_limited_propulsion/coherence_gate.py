@@ -10,10 +10,10 @@ Formulation of Coherence-Gated Momentum Transfer."
 
 Equations from the paper
 ------------------------
-Gate function (Eq. 6a):
+Gate function (Eq. 6):
     G(t) = exp(-α · Δφ(t)²)
 
-Velocity-gain law (Eq. 6b):
+Velocity-gain law (Eq. 6):
     Δv = Isp · η · ∫₀^tf  [P_in(t) / (M(t) · v(t))]  · G(t)  dt
 """
 
@@ -21,12 +21,6 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import ArrayLike
-
-# Backward-compatible trapezoid integration (np.trapz removed in NumPy 2.0)
-try:
-    _trapezoid = np.trapezoid
-except AttributeError:
-    _trapezoid = np.trapz  # type: ignore[attr-defined]
 
 
 # ---------------------------------------------------------------------------
@@ -69,7 +63,7 @@ def coherence_gate(delta_phi: ArrayLike, alpha: float) -> np.ndarray:
     Examples
     --------
     >>> import numpy as np
-    >>> from geometry_limited_propulsion.coherence_gate import coherence_gate
+    >>> from coherence_gate import coherence_gate
     >>> phi = np.linspace(0, 2, 9)
     >>> G = coherence_gate(phi, alpha=2.0)
     >>> G.round(4)
@@ -108,8 +102,6 @@ def classical_delta_v(
     float
         Classical velocity gain Δv [m s⁻¹].
     """
-    if isp <= 0:
-        raise ValueError(f"isp must be strictly positive, got {isp!r}.")
     if mass_final <= 0 or mass_initial <= mass_final:
         raise ValueError(
             "Require mass_initial > mass_final > 0; "
@@ -122,79 +114,176 @@ def classical_delta_v(
 # HLV–AILEE gated velocity gain (numerical integration)
 # ---------------------------------------------------------------------------
 
+# Valid mode identifiers for hlv_ailee_delta_v()
+MODES = frozenset({"power", "rocket"})
+
+
 def hlv_ailee_delta_v(
     t: ArrayLike,
-    p_in: ArrayLike,
     mass: ArrayLike,
-    velocity: ArrayLike,
     delta_phi: ArrayLike,
     isp: float,
     eta: float,
     alpha: float,
+    *,
+    mode: str = "power",
+    # power-mode arguments
+    p_in: ArrayLike | None = None,
+    velocity: ArrayLike | None = None,
+    # rocket-mode arguments
+    m_dot: ArrayLike | None = None,
 ) -> float:
-    """Geometry-gated velocity gain (Eq. 6 of paper).
+    """Geometry-gated velocity gain with selectable physical framing.
 
-    Numerically integrates
+    Two dimensionally consistent formulations are supported via the *mode*
+    toggle, addressing a design question raised during model review:
+
+    **mode='power'** — Power-limited framing (original formulation, default).
+    Best suited to electric / ion propulsion where thrust derives from input
+    power rather than direct propellant expulsion:
 
         Δv = Isp · η · ∫₀^tf  [P_in(t) / (M(t) · v(t))]  · G(t)  dt
 
-    where G(t) = exp(-α · Δφ(t)²) is the coherence gate.
+    **mode='rocket'** — Rocket-equation framing (Marcel Krüger's preferred
+    formulation for chemical propulsion). Places the gate directly on each
+    mass-expulsion event, recovering Tsiolkovsky exactly when G = 1:
 
-    All array arguments must share the same length N (time steps).
+        Δv = g₀ · Isp · ∫₀^tf  G(t) · (−Ṁ(t) / M(t))  dt
 
-    Parameters
-    ----------
+    In both cases G(t) = exp(−α · Δφ(t)²) is the coherence gate.
+
+    Choosing between modes
+    ----------------------
+    * Chemical / bipropellant / solid rocket → ``mode='rocket'``
+      Supply *m_dot*; *p_in* and *velocity* are unused.
+    * Electric / ion / Hall thruster        → ``mode='power'``
+      Supply *p_in* and *velocity*; *m_dot* is unused.
+
+    Parameters shared by both modes
+    --------------------------------
     t : array-like, shape (N,)
-        Time grid [s].  Need not be uniform; integration uses the trapezoid
-        rule over the supplied grid.
-    p_in : array-like, shape (N,)
-        Input power P_in(t) [W].
+        Time grid [s].  Need not be uniform; trapezoid rule is used.
     mass : array-like, shape (N,)
         System mass M(t) [kg].  Must be strictly positive everywhere.
-    velocity : array-like, shape (N,)
-        Instantaneous velocity v(t) [m s⁻¹].  Must be strictly positive
-        everywhere (i.e. the system is already in motion).
     delta_phi : array-like, shape (N,)
         Phase/geometric deviation Δφ(t).  Dimensionless.
     isp : float
         Specific impulse [s].
     eta : float
         Aggregate classical efficiency η ∈ (0, 1].
+        Used only in ``mode='power'``; in ``mode='rocket'`` efficiency
+        is already encoded in Isp and Ṁ.
     alpha : float
         Gate sharpness parameter α > 0.
+    mode : str
+        ``'power'`` (default) or ``'rocket'``.
+
+    Power-mode only (mode='power')
+    --------------------------------
+    p_in : array-like, shape (N,)
+        Input power P_in(t) [W].
+    velocity : array-like, shape (N,)
+        Instantaneous velocity v(t) [m s⁻¹].  Must be strictly positive.
+
+    Rocket-mode only (mode='rocket')
+    ---------------------------------
+    m_dot : array-like, shape (N,)
+        Mass-flow rate Ṁ(t) [kg s⁻¹].  Positive values indicate propellant
+        consumption (i.e. dM/dt = −Ṁ, so Ṁ > 0 means mass is decreasing).
 
     Returns
     -------
     float
         Gated velocity gain Δv [m s⁻¹].
 
+    Raises
+    ------
+    ValueError
+        For unrecognised *mode*, missing required arguments, or invalid inputs.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> N = 200
+    >>> t = np.linspace(0, 60, N)
+    >>> mass = np.linspace(800, 500, N)
+
+    Power-limited (electric propulsion):
+
+    >>> dv = hlv_ailee_delta_v(
+    ...     t, mass, delta_phi=np.full(N, 0.2),
+    ...     isp=3000.0, eta=0.65, alpha=2.0,
+    ...     mode='power',
+    ...     p_in=np.full(N, 2e5),
+    ...     velocity=np.linspace(200, 800, N),
+    ... )
+
+    Rocket-equation (chemical propulsion):
+
+    >>> dv = hlv_ailee_delta_v(
+    ...     t, mass, delta_phi=np.full(N, 0.2),
+    ...     isp=350.0, eta=0.85, alpha=2.0,
+    ...     mode='rocket',
+    ...     m_dot=np.full(N, 5.0),
+    ... )
+
     Notes
     -----
-    * For a perfectly aligned system (Δφ ≡ 0) the gate collapses to 1 and the
-      result reduces to a power-weighted integral form of the rocket equation.
     * No new forces are introduced.  The gate encodes *admissibility* of
       coupling, not an additional thrust mechanism.
+    * When Δφ ≡ 0, mode='rocket' recovers the Tsiolkovsky equation exactly
+      (up to numerical integration error).
+    * When Δφ ≡ 0, mode='power' reduces to a power-weighted velocity integral.
     """
-    t = np.asarray(t, dtype=float)
-    p_in = np.asarray(p_in, dtype=float)
-    mass = np.asarray(mass, dtype=float)
-    velocity = np.asarray(velocity, dtype=float)
-    delta_phi = np.asarray(delta_phi, dtype=float)
+    if mode not in MODES:
+        raise ValueError(
+            f"mode must be one of {sorted(MODES)!r}, got {mode!r}."
+        )
 
-    if not (t.shape == p_in.shape == mass.shape == velocity.shape == delta_phi.shape):
-        raise ValueError("All array arguments must have the same shape.")
-    if isp <= 0:
-        raise ValueError(f"isp must be strictly positive, got {isp!r}.")
+    t    = np.asarray(t,         dtype=float)
+    mass = np.asarray(mass,      dtype=float)
+    dphi = np.asarray(delta_phi, dtype=float)
+
+    if not (t.shape == mass.shape == dphi.shape):
+        raise ValueError("t, mass, and delta_phi must have the same shape.")
     if np.any(mass <= 0):
         raise ValueError("mass must be strictly positive at all time steps.")
-    if np.any(velocity <= 0):
-        raise ValueError("velocity must be strictly positive at all time steps.")
     if not (0 < eta <= 1):
         raise ValueError(f"eta must be in (0, 1], got {eta!r}.")
 
-    gate = coherence_gate(delta_phi, alpha)
-    integrand = (p_in / (mass * velocity)) * gate
-    return float(isp * eta * _trapezoid(integrand, t))
+    gate = coherence_gate(dphi, alpha)
+
+    # ------------------------------------------------------------------
+    if mode == "power":
+        if p_in is None or velocity is None:
+            raise ValueError(
+                "mode='power' requires both p_in and velocity arrays."
+            )
+        p_in_arr = np.asarray(p_in,     dtype=float)
+        vel_arr  = np.asarray(velocity, dtype=float)
+        if not (t.shape == p_in_arr.shape == vel_arr.shape):
+            raise ValueError("p_in and velocity must match the shape of t.")
+        if np.any(vel_arr <= 0):
+            raise ValueError("velocity must be strictly positive at all time steps.")
+        integrand = (p_in_arr / (mass * vel_arr)) * gate
+        return float(isp * eta * np.trapz(integrand, t))
+
+    # ------------------------------------------------------------------
+    else:  # mode == "rocket"
+        if m_dot is None:
+            raise ValueError(
+                "mode='rocket' requires m_dot (mass-flow rate) array."
+            )
+        m_dot_arr = np.asarray(m_dot, dtype=float)
+        if not (t.shape == m_dot_arr.shape):
+            raise ValueError("m_dot must match the shape of t.")
+        if np.any(m_dot_arr < 0):
+            raise ValueError(
+                "m_dot must be non-negative (positive = propellant consumed)."
+            )
+        # dv = g₀ · Isp · G(t) · (−dM/M) = g₀ · Isp · G(t) · (Ṁ/M) dt
+        integrand = gate * (m_dot_arr / mass)
+        return float(G0 * isp * np.trapz(integrand, t))
 
 
 # ---------------------------------------------------------------------------
