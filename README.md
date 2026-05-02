@@ -108,9 +108,11 @@ velocity = np.linspace(100, 400, N)  # reference trajectory [m/s]
 delta_phi = 0.05 + 0.8 * (t / t[-1])**2  # slowly drifting misalignment
 
 dv = hlv_ailee_delta_v(
-    t, p_in, mass, velocity,
-    delta_phi=delta_phi,
+    t, mass, delta_phi,
     isp=350.0, eta=0.85, alpha=2.0,
+    mode='power',
+    p_in=p_in,
+    velocity=velocity,
 )
 print(f"Δv = {dv:.2f} m/s")
 ```
@@ -125,7 +127,8 @@ print(f"Δv = {dv:.2f} m/s")
 |---|---|
 | `coherence_gate(delta_phi, alpha)` | Gate function G(t) = exp(−α·Δφ²); returns values in (0, 1] |
 | `classical_delta_v(isp, m0, mf)` | Tsiolkovsky baseline Δv = Isp·g₀·ln(M₀/Mf) |
-| `hlv_ailee_delta_v(t, p_in, mass, velocity, delta_phi, isp, eta, alpha)` | Full numerical integration of the gated velocity-gain law (Eq. 6) |
+| `hlv_ailee_delta_v(t, mass, delta_phi, isp, eta, alpha, *, mode='power', p_in, velocity)` | **mode='power'** (electric/ion): gated velocity gain via power integral — requires `p_in` and `velocity` arrays |
+| `hlv_ailee_delta_v(t, mass, delta_phi, isp, eta, alpha, *, mode='rocket', m_dot)` | **mode='rocket'** (chemical): gated Tsiolkovsky integration — requires `m_dot` array; `eta` is unused |
 | `gate_vs_phase_sweep(delta_phi_values, alpha)` | Sweep G over a range of Δφ — useful for plotting acceptance-window shape |
 | `hysteresis_sweep(phi_up, phi_down, alpha_up, alpha_down)` | Asymmetric up/down sweep for hysteresis loop visualization (Figure 2) |
 
