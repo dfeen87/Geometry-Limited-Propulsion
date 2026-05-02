@@ -52,6 +52,15 @@ Geometry-Limited-Propulsion/
 │       └── simulation_stub.ipynb            # End-to-end simulation notebook
 ├── tests/
 │   └── test_coherence_gate.py               # Unit tests for core gate behavior
+├── figures/
+│   ├── README.md                            # Caveat + per-figure descriptions
+│   ├── generate_experimental_data.py        # Generates all synthetic figures and CSV data
+│   ├── fig1_thrust_vs_power.png             # Gate-limited saturation: Δv vs. input power
+│   ├── fig2_hysteresis_loop.png             # Phase-window hysteresis: up/down timing sweep
+│   ├── fig3_drifting_burn_timeseries.png    # Drifting burn: Δφ, G(t), and cumulative Δv
+│   ├── fig4_spectral_proxy_sweep.png        # Spectral proxy Δφ_spec across frequency sweep
+│   ├── fig5_gate_threshold_scan.png         # Gate collapse scan with α calibration fit
+│   └── fig6_proxy_summary_panel.png         # All three proxies + composite G(t) summary
 ├── verification/
 │   └── VERIFICATION_PLAN.md                 # Three-level plan for independent review
 └── paper/
