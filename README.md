@@ -34,6 +34,11 @@ The model makes **no reactionless or superluminal claims**. All predictions are 
 hlv-ailee/
 ├── README.md
 ├── LICENSE
+├── requirements.txt            # Runtime dependencies
+├── .gitignore                  # Common Python/Jupyter ignore rules
+├── CITATION.cff                # Citation metadata for GitHub/Zenodo
+├── CONTRIBUTING.md             # Contribution guidelines
+├── CODE_OF_CONDUCT.md          # Community standards
 ├── src/
 │   ├── coherence_gate.py           # Core gate function and velocity-gain law
 │   ├── phase_alignment_metrics.py  # Measurable Δφ proxies (Eqs. 7–9)
@@ -51,7 +56,9 @@ hlv-ailee/
 ```bash
 git clone https://github.com/dfeen87/Geometry-Limited-Propulsion.git
 cd Geometry-Limited-Propulsion
-pip install numpy matplotlib scipy
+pip install -r requirements.txt
+# Optional (needed only for delta_phi_spectral):
+pip install scipy
 ```
 
 SciPy is optional — it is only required for the spectral proxy (`delta_phi_spectral`). All other functionality runs on NumPy alone.
