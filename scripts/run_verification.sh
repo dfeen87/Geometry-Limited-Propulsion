@@ -12,7 +12,7 @@ python -V
 pip -V
 
 echo "[1/3] Installing package (editable)"
-pip install -e .
+pip install --no-build-isolation -e .
 
 echo "[2/3] Running unit tests"
 pytest -q
