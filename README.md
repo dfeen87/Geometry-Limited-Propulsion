@@ -247,4 +247,4 @@ This project is released under the [MIT License](LICENSE).
 
 ## Acknowledgement
 
-Thank you to Claude (Anthropic) for assisting with the simulation code and PAPER.md. Thank you to Codex (OpenAI) for the final code review. All scientific content, theoretical framework, and experimental claims originate solely with the authors.
+We acknowledge Claude (Anthropic) for assistance with simulation code development and contributions to PAPER.md. We also thank Codex (OpenAI) and Copilot (Microsoft) for final code‑review support prior to versioned releases. All scientific content, theoretical constructs, and experimental claims originate solely from the authors.
