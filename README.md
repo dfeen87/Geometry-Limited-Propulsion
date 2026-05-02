@@ -32,20 +32,25 @@ The model makes **no reactionless or superluminal claims**. All predictions are 
 ## Repository Structure
 
 ```
-hlv-ailee/
+Geometry-Limited-Propulsion/
 ├── README.md
 ├── LICENSE
-├── requirements.txt            # Runtime dependencies
-├── .gitignore                  # Common Python/Jupyter ignore rules
-├── CITATION.cff                # Citation metadata for GitHub/Zenodo
-├── CONTRIBUTING.md             # Contribution guidelines
-├── CODE_OF_CONDUCT.md          # Community standards
+├── requirements.txt                         # Runtime dependencies
+├── pyproject.toml                           # Build/system metadata
+├── .gitignore                               # Common Python/Jupyter ignore rules
+├── CITATION.cff                             # Citation metadata for GitHub/Zenodo
+├── CONTRIBUTING.md                          # Contribution guidelines
+├── CODE_OF_CONDUCT.md                       # Community standards
 ├── src/
-│   ├── coherence_gate.py           # Core gate function and velocity-gain law
-│   ├── phase_alignment_metrics.py  # Measurable Δφ proxies (Eqs. 7–9)
-│   └── simulation_stub.ipynb       # End-to-end simulation notebook
+│   └── geometry_limited_propulsion/
+│       ├── __init__.py                      # Package exports
+│       ├── coherence_gate.py                # Core gate function and velocity-gain law
+│       ├── phase_alignment_metrics.py       # Measurable Δφ proxies (Eqs. 7–9)
+│       └── simulation_stub.ipynb            # End-to-end simulation notebook
+├── tests/
+│   └── test_coherence_gate.py               # Unit tests for core gate behavior
 └── paper/
-    └── propulsion_hlv_ailee.md     # Paper in Markdown (Unicode math)
+    └── propulsion_hlv_ailee.md              # Paper in Markdown (Unicode math)
 ```
 
 ---
