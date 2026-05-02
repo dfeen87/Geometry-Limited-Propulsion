@@ -22,6 +22,12 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import ArrayLike
 
+# Backward-compatible trapezoid integration (np.trapz removed in NumPy 2.0)
+try:
+    _trapezoid = np.trapezoid
+except AttributeError:
+    _trapezoid = np.trapz  # type: ignore[attr-defined]
+
 
 # ---------------------------------------------------------------------------
 # Temporal proxy  (Eq. 7)
@@ -188,7 +194,7 @@ def delta_phi_spectral(
         Default ``"hann"``.
     nperseg : int or None
         Segment length for Welch PSD estimation.  ``None`` → SciPy default
-        (signal length // 8, floored at 256).
+        (``min(signal_length, 256)``).
 
     Returns
     -------
@@ -237,8 +243,8 @@ def delta_phi_spectral(
 
     # Normalise to unit area (probability-density-like comparison)
     dfreq = freqs[1] - freqs[0]
-    norm_thrust = np.trapz(S_thrust, dx=dfreq)
-    norm_lat    = np.trapz(S_lat,    dx=dfreq)
+    norm_thrust = _trapezoid(S_thrust, dx=dfreq)
+    norm_lat    = _trapezoid(S_lat,    dx=dfreq)
 
     if norm_thrust < 1e-30:
         raise ValueError("Thrust PSD integrates to ~0; check the input signal.")
@@ -248,7 +254,7 @@ def delta_phi_spectral(
     S_thrust_n = S_thrust / norm_thrust
     S_lat_n    = S_lat    / norm_lat
 
-    return float(np.trapz(np.abs(S_thrust_n - S_lat_n), dx=dfreq))
+    return float(_trapezoid(np.abs(S_thrust_n - S_lat_n), dx=dfreq))
 
 
 # ---------------------------------------------------------------------------
