@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+title: "Geometry-Limited Propulsion: HLV–AILEE"
+message: "If you use this software, please cite it with the metadata below."
+type: software
+authors:
+  - family-names: "Krüger"
+    given-names: "Marcel"
+    orcid: "https://orcid.org/0009-0002-5709-9729"
+  - family-names: "Feeney"
+    given-names: "Don"
+    orcid: "https://orcid.org/0009-0003-1350-4160"
+repository-code: "https://github.com/dfeen87/Geometry-Limited-Propulsion"
+license: "MIT"
+version: "0.1.0"
+date-released: "2026-05-02"
