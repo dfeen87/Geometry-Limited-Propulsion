@@ -24,6 +24,8 @@ controls realizable energy–momentum coupling. When alignment is good (Δφ ≈
 
 The model makes **no reactionless or superluminal claims**. All predictions are falsifiable. See §6 of the paper for the full falsification protocol.
 
+> A note on current status: The simulation code implements the HLV–AILEE mathematical framework faithfully and produces clean, falsifiable predictions. However, the bridge between the measurable Δφ proxies and the underlying lattice geometry remains theoretical — no empirical validation has been performed yet. What this repository provides is a numerically precise, testable formulation: the experiments needed to confirm or falsify it are the logical next step, and the measurement protocol in simulation_stub.ipynb and §7 of the paper is designed with exactly that in mind.
+
 ---
 
 ## Repository Structure
