@@ -1,7 +1,9 @@
 import numpy as np
 
-from src.coherence_gate import coherence_gate, classical_delta_v
-
+from geometry_limited_propulsion.coherence_gate import (
+    coherence_gate,
+    classical_delta_v,
+)
 
 def test_coherence_gate_identity_at_zero():
     gate = coherence_gate(np.array([0.0, 0.0]), alpha=2.0)
