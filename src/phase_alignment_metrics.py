@@ -131,6 +131,8 @@ def delta_phi_spatial(
         raise ValueError(
             "vflow must have shape (2, M, N) — [v_x, v_y] over a 2-D grid."
         )
+    if dx <= 0 or dy <= 0:
+        raise ValueError(f"dx and dy must be strictly positive, got dx={dx}, dy={dy}.")
     vx, vy = vflow[0], vflow[1]
 
     # z-component of curl: ∂vy/∂x − ∂vx/∂y
