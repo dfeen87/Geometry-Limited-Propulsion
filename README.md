@@ -9,6 +9,7 @@
 [![NumPy](https://img.shields.io/badge/NumPy-required-013243?logo=numpy)](https://numpy.org/)
 [![SciPy](https://img.shields.io/badge/SciPy-optional-8CAAE6?logo=scipy)](https://scipy.org/)
 [![Jupyter](https://img.shields.io/badge/Jupyter-notebook-F37626?logo=jupyter)](https://jupyter.org/)
+[![CI](https://github.com/dfeen87/Geometry-Limited-Propulsion/workflows/CI/badge.svg)](https://github.com/dfeen87/Geometry-Limited-Propulsion/actions)
 
 ---
 
