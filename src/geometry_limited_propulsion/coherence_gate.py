@@ -22,6 +22,12 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import ArrayLike
 
+# Backward-compatible trapezoid integration (np.trapz removed in NumPy 2.0)
+try:
+    _trapezoid = np.trapezoid
+except AttributeError:
+    _trapezoid = np.trapz  # type: ignore[attr-defined]
+
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -102,6 +108,8 @@ def classical_delta_v(
     float
         Classical velocity gain Δv [m s⁻¹].
     """
+    if isp <= 0:
+        raise ValueError(f"isp must be strictly positive, got {isp!r}.")
     if mass_final <= 0 or mass_initial <= mass_final:
         raise ValueError(
             "Require mass_initial > mass_final > 0; "
@@ -239,6 +247,8 @@ def hlv_ailee_delta_v(
         raise ValueError(
             f"mode must be one of {sorted(MODES)!r}, got {mode!r}."
         )
+    if isp <= 0:
+        raise ValueError(f"isp must be strictly positive, got {isp!r}.")
 
     t    = np.asarray(t,         dtype=float)
     mass = np.asarray(mass,      dtype=float)
@@ -266,7 +276,7 @@ def hlv_ailee_delta_v(
         if np.any(vel_arr <= 0):
             raise ValueError("velocity must be strictly positive at all time steps.")
         integrand = (p_in_arr / (mass * vel_arr)) * gate
-        return float(isp * eta * np.trapz(integrand, t))
+        return float(isp * eta * _trapezoid(integrand, t))
 
     # ------------------------------------------------------------------
     else:  # mode == "rocket"
@@ -283,7 +293,7 @@ def hlv_ailee_delta_v(
             )
         # dv = g₀ · Isp · G(t) · (−dM/M) = g₀ · Isp · G(t) · (Ṁ/M) dt
         integrand = gate * (m_dot_arr / mass)
-        return float(G0 * isp * np.trapz(integrand, t))
+        return float(G0 * isp * _trapezoid(integrand, t))
 
 
 # ---------------------------------------------------------------------------

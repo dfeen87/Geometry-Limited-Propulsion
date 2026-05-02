@@ -94,7 +94,11 @@ def _simple_arrays(n=10):
 
 def test_hlv_ailee_delta_v_returns_float():
     t, p_in, mass, velocity, delta_phi = _simple_arrays()
-    result = hlv_ailee_delta_v(t, p_in, mass, velocity, delta_phi, isp=300.0, eta=1.0, alpha=2.0)
+    result = hlv_ailee_delta_v(
+        t, mass, delta_phi,
+        isp=300.0, eta=1.0, alpha=2.0,
+        mode='power', p_in=p_in, velocity=velocity,
+    )
     assert isinstance(result, float)
     assert result > 0
 
@@ -102,28 +106,48 @@ def test_hlv_ailee_delta_v_returns_float():
 def test_hlv_ailee_delta_v_rejects_nonpositive_isp():
     t, p_in, mass, velocity, delta_phi = _simple_arrays()
     with pytest.raises(ValueError):
-        hlv_ailee_delta_v(t, p_in, mass, velocity, delta_phi, isp=0.0, eta=1.0, alpha=2.0)
+        hlv_ailee_delta_v(
+            t, mass, delta_phi,
+            isp=0.0, eta=1.0, alpha=2.0,
+            mode='power', p_in=p_in, velocity=velocity,
+        )
 
 
 def test_hlv_ailee_delta_v_rejects_bad_eta():
     t, p_in, mass, velocity, delta_phi = _simple_arrays()
     with pytest.raises(ValueError):
-        hlv_ailee_delta_v(t, p_in, mass, velocity, delta_phi, isp=300.0, eta=0.0, alpha=2.0)
+        hlv_ailee_delta_v(
+            t, mass, delta_phi,
+            isp=300.0, eta=0.0, alpha=2.0,
+            mode='power', p_in=p_in, velocity=velocity,
+        )
     with pytest.raises(ValueError):
-        hlv_ailee_delta_v(t, p_in, mass, velocity, delta_phi, isp=300.0, eta=1.5, alpha=2.0)
+        hlv_ailee_delta_v(
+            t, mass, delta_phi,
+            isp=300.0, eta=1.5, alpha=2.0,
+            mode='power', p_in=p_in, velocity=velocity,
+        )
 
 
 def test_hlv_ailee_delta_v_rejects_shape_mismatch():
     t, p_in, mass, velocity, delta_phi = _simple_arrays()
     with pytest.raises(ValueError):
-        hlv_ailee_delta_v(t, p_in[:-1], mass, velocity, delta_phi, isp=300.0, eta=1.0, alpha=2.0)
+        hlv_ailee_delta_v(
+            t, mass[:-1], delta_phi,
+            isp=300.0, eta=1.0, alpha=2.0,
+            mode='power', p_in=p_in, velocity=velocity,
+        )
 
 
 def test_hlv_ailee_delta_v_zero_gate_gives_zero():
     t, p_in, mass, velocity, _ = _simple_arrays()
     # Very large delta_phi collapses gate to ~0
     delta_phi = np.ones(len(t)) * 1000.0
-    result = hlv_ailee_delta_v(t, p_in, mass, velocity, delta_phi, isp=300.0, eta=1.0, alpha=2.0)
+    result = hlv_ailee_delta_v(
+        t, mass, delta_phi,
+        isp=300.0, eta=1.0, alpha=2.0,
+        mode='power', p_in=p_in, velocity=velocity,
+    )
     assert result == pytest.approx(0.0, abs=1e-10)
 
 
