@@ -46,12 +46,25 @@ Geometry-Limited-Propulsion/
 │       ├── __init__.py                      # Package exports
 │       ├── coherence_gate.py                # Core gate function and velocity-gain law
 │       ├── phase_alignment_metrics.py       # Measurable Δφ proxies (Eqs. 7–9)
+|       ├── lattice_reference.py             # Derives f_lat, ψ_lat, and α from HLV geometry
 │       └── simulation_stub.ipynb            # End-to-end simulation notebook
 ├── tests/
 │   └── test_coherence_gate.py               # Unit tests for core gate behavior
 └── paper/
     └── propulsion_hlv_ailee.md              # Paper in Markdown (Unicode math)
 ```
+> A note on current status: The simulation code implements the HLV–AILEE
+mathematical framework faithfully and produces clean, falsifiable predictions.
+lattice_reference.py grounds the key free parameters (f_lat, ψ_lat, α)
+in the φ-harmonic structure of the quasicrystal geometry rather than leaving
+them as arbitrary user choices — making the full pipeline from theory to
+measurement deterministic for the first time.  However, the bridge between
+these derived quantities and the physical host-lattice geometry remains
+theoretical: no empirical validation has been performed yet.  What this
+repository provides is a numerically precise, testable formulation.  The
+experiments needed to confirm or falsify it are the logical next step, and
+the measurement protocol in simulation_stub.ipynb and §7 of the paper is
+designed with exactly that in mind.
 
 ---
 
