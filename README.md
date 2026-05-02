@@ -41,15 +41,19 @@ Geometry-Limited-Propulsion/
 ├── CITATION.cff                             # Citation metadata for GitHub/Zenodo
 ├── CONTRIBUTING.md                          # Contribution guidelines
 ├── CODE_OF_CONDUCT.md                       # Community standards
+├── scripts/
+│   └── run_verification.sh                  # Reproducible verification runner (install → test → snapshot)
 ├── src/
 │   └── geometry_limited_propulsion/
 │       ├── __init__.py                      # Package exports
 │       ├── coherence_gate.py                # Core gate function and velocity-gain law
 │       ├── phase_alignment_metrics.py       # Measurable Δφ proxies (Eqs. 7–9)
-|       ├── lattice_reference.py             # Derives f_lat, ψ_lat, and α from HLV geometry
+│       ├── lattice_reference.py             # Derives f_lat, ψ_lat, and α from HLV geometry
 │       └── simulation_stub.ipynb            # End-to-end simulation notebook
 ├── tests/
 │   └── test_coherence_gate.py               # Unit tests for core gate behavior
+├── verification/
+│   └── VERIFICATION_PLAN.md                 # Three-level plan for independent review
 └── paper/
     └── propulsion_hlv_ailee.md              # Paper in Markdown (Unicode math)
 ```
@@ -116,6 +120,40 @@ dv = hlv_ailee_delta_v(
 )
 print(f"Δv = {dv:.2f} m/s")
 ```
+
+---
+
+## Verification
+
+### Running the verification script
+
+`scripts/run_verification.sh` provides a single-command reproducibility check:
+
+```bash
+bash scripts/run_verification.sh
+```
+
+It performs three steps in sequence:
+
+| Step | Action |
+|---|---|
+| 1 | Install the package in editable mode (`pip install -e .`) |
+| 2 | Run the full unit-test suite (`pytest -q`) |
+| 3 | Record the current commit hash and write a sorted dependency snapshot to `verification/requirements-lock.txt` |
+
+The script requires only a standard Python environment with `pip` and `pytest` available.
+
+### Verification plan
+
+`verification/VERIFICATION_PLAN.md` defines a three-level plan for independent review:
+
+| Level | Scope | Key pass criteria |
+|---|---|---|
+| **1 — Code Reliability** *(immediate)* | Isolated install + unit tests | All tests pass; results repeat on two consecutive runs |
+| **2 — Numerical Consistency** *(short-term)* | Deterministic sweeps; notebook figure reproduction | Curves stable under fixed seed/config; no sign or unit errors |
+| **3 — Experimental Readiness** *(medium-term)* | Pre-registered perturbation protocol; data schema | Independent reviewer can reproduce headline plots from raw data |
+
+Recommended next artifacts (per the plan): `verification/baseline_results.json`, `verification/reproduce_notebook.py`, and `verification/data_schema.md`.
 
 ---
 
